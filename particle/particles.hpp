@@ -12,6 +12,7 @@ struct Particle
     Texture2D texture;
     Vector2 position;
     Color color;
+    float Size;
     int Speed;
     int Angle;
     int LifeTime;
@@ -51,7 +52,7 @@ namespace Poison
         Particle.position.y += (sin(Particle.Angle * PI /180)* Particle.Speed);
         Particle.LifeTime--;
         if(Particle.LifeTime >= 0)
-            DrawTextureV(Particle.texture, Particle.position, Particle.color);
+            DrawTextureEx(Particle.texture, Particle.position, 0, Particle.Size, Particle.color);
     }
     //Place Between StartDraw() and EndDraw()
     void AutoPixelParticle(PixelParticle &Particle)
