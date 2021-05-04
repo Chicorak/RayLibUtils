@@ -13,3 +13,8 @@ heres how to push it in
 
 Particles.push_back(new Particle{Texture, Vector2 Position, Color color; float size; int Speed; int Angle; int LifeTime;});
 so we push back a new Particle with a Texture and a Vector2 type Position, with a raylib color type, next a size 1 is full size anyless shrinks it the rest is self explanitory
+
+Example:
+ParticleClear(); //right before drawing
+
+for (auto &a : PixelParticles) AutoParticle(*a); // used to draw and modify the particle
