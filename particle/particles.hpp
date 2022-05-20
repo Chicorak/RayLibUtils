@@ -1,92 +1,92 @@
-#pragma once
-#include "raylib.h"
+#ifdef LOCALRAYLIB
+
+    #include "raylib.h"
+
+#else
+
+    #include <raylib.h>
+
+#endif
+
 #include <math.h>
 #include <vector>
 #include <memory>
-//Particals have a randomized angle and lifetime
 
 
-//place inside vector or array
+
 struct Particle 
 {
     Texture2D texture;
     Vector2 position;
     Color color;
-    float Size = 0.0f;
-    int Speed = 0;
-    int Angle = 0;
-    int LifeTime = 0;
-    int Gravity = 0;
+    float scale = 1, angle = 0, speed = 0, gravity = 0, lifeTime = 1;
 };
-//Vector2 position; Color color; int size; int Speed; int Angle; int LifeTime; int Gravity;
+
 struct PixelParticle 
 {
-    Vector2 Position;
-    Color Color;
-    int Size = 0;
-    int Speed = 0;
-    int Angle = 0;
-    int LifeTime = 0;
-    int Gravity = 0;
-    int ID = 0;
+    Vector2 position;
+    Color color;
+    int scale = 0;
+    float angle = 0, speed = 0, gravity = 0, lifeTime = 1;
 };
 
-std::vector<PixelParticle*> PixelParticles;
-std::vector<Particle*> Particles;
+std::vector<std::unique_ptr<PixelParticle>> PixelParticles;
+std::vector<std::unique_ptr<Particle>> Particles;
 
-//Used to Draw Particle
-    
 
-    void DrawParticle(Texture2D Texture, Vector2 ParticlePosition, int Angle, int Speed, Color color)
-    {
-        ParticlePosition.x += (cos(Angle * PI /180)* Speed);
-        ParticlePosition.y += (sin(Angle * PI /180)* Speed);
-        DrawTexture(Texture, ParticlePosition.x, ParticlePosition.y, WHITE);
-    }
-    //Make Your Own Particle system and draw it using this helpful function
-    void DrawProParticle(Texture2D Texture, Vector2 ParticlePosition, int Speed, int Rotation, int Scale, Color color)
-    {
-        DrawTextureEx(Texture, ParticlePosition, Rotation, Scale, color);
-    }
-    //Place Between StartDraw() and EndDraw()
-    void AutoParticle(Particle &Particle)
-    {
-        Particle.position.x += (cos(Particle.Angle * PI /180)* Particle.Speed);
-        Particle.position.y += (sin(Particle.Angle * PI /180)* Particle.Speed);
-        Particle.position.y += Particle.Gravity * GetFrameTime();
-        Particle.LifeTime - GetFrameTime();
-        DrawTextureEx(Particle.texture, Particle.position, 0, Particle.Size, Particle.color);
-    }
-    //Place Between StartDraw() and EndDraw()
-    void AutoPixelParticle(PixelParticle &Particle)
-    {
-        Particle.Position.x += (cos(Particle.Angle * PI /180)* Particle.Speed);
-        Particle.Position.y += (sin(Particle.Angle * PI /180)* Particle.Speed);
-        Particle.Position.y += Particle.Gravity * GetFrameTime();
-        Particle.LifeTime - GetFrameTime();
-        DrawRectangleV(Particle.Position, Vector2{(float)Particle.Size, (float)Particle.Size}, Particle.Color);      
-    }
-    Color REffect(int x, int y, int z)
-    {
-        Color colorEffect = ColorFromHSV((float)(((x + y + z)*18)%360), 0.75f, 0.9f);
-        return colorEffect;
-    }
+std::unique_ptr<Particle> CreateParticle(Texture2D tex, Vector2 pos, Color col, float speed, float gravity, int angle, float scale = 1, float lifeTime = 10) {
+    std::unique_ptr<Particle> p = std::make_unique<Particle>(tex, pos, col, scale, angle, speed, gravity, lifeTime);
+    Particles.push_back(p);
+    return p;
+}
 
-void ParticleClear()
-{
-    for (int i = Particles.size() - 1; i >= 0; i--)
-    {
-        if (Particles[i]->LifeTime == 0) 
-        {
-            delete Particles[i];
+std::unique_ptr<PixelParticle> CreatePixelParticle(Vector2 pos, Color col, float speed, float gravity, int angle, int scale = 1, float lifeTime = 10) {
+    std::unique_ptr<PixelParticle> p = std::make_unique<PixelParticle>(pos, col, scale, angle, speed, gravity, lifeTime);
+    PixelParticles.push_back(p);
+    return p;
+}
+
+void DrawParticle(Particle &p) {
+    DrawTexturePro(p.texture, {0, 0, (float)p.texture.width, (float)p.texture.height}, {p.position.x, p.position.y, (float)p.texture.width* p.scale, (float)p.texture.height * p.scale}, {(float)p.texture.width/2 * p.scale, (float)p.texture.height/2 * p.scale}, p.angle, p.color);
+}
+void DrawPixelParticle(PixelParticle &p) { 
+    DrawRectanglePro({p.position.x, p.position.y, (float)p.scale, (float)p.scale}, {p.position.x + (p.scale / 2), p.position.y + (p.scale / 2)}, p.angle, p.color);
+}
+
+void UpdateParticles(Particle &p) {
+    p.position.x += (cos(p.angle * PI /180)* p.speed);
+    p.position.y += (sin(p.angle * PI /180)* p.speed);
+    p.position.y += p.gravity * GetFrameTime();
+    p.lifeTime -= GetFrameTime();
+}
+
+void UpdatePixelParticle(PixelParticle &p) {
+    p.position.x += (cos(p.angle * PI / 180) * p.speed);
+    p.position.y += (sin(p.angle * PI /180) * p.speed);
+    p.position.y += p.gravity * GetFrameTime();
+    p.lifeTime -= GetFrameTime();    
+}
+
+Color REffect(int x, int y, int z, int banding) {
+    Color colorEffect = ColorFromHSV((float)(((x + y + z) * banding ) % 360 ), 0.75f, 0.9f); // straight up stolen from a raylib example
+    return colorEffect;
+}
+
+void ParticlesClear() {
+    Particles.clear();
+}
+void PixelParticlesClear() {
+    PixelParticles.clear();
+}
+
+void DestroyParticles() {
+    for (int i = 0; i < Particles.size(); i++) {
+        if (Particles[i]->lifeTime <= 0) {
             Particles.erase(Particles.begin()+i);
         }
     }   
-    for (int i = PixelParticles.size() - 1; i >= 0; i--)
-    {  
-        if (PixelParticles[i]->LifeTime == 0) 
-        {
-            delete PixelParticles[i];
+    for (int i = 0; i < PixelParticles.size(); i++) {  
+        if (PixelParticles[i]->lifeTime <= 0) {
             PixelParticles.erase(PixelParticles.begin() + i);
         }
     }   

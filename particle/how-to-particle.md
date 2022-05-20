@@ -1,20 +1,67 @@
 # How to use
-there are two types of particles: Pixel and Texture. Here is how to use the Texture 
+there are two types of particles: Pixel and Texture.
 
-There are two main functions to using the system:
-AutoParticle
-ParticleClear
+There are three main functions to using the system:
+Particle creation
+Particle rendering
+Particle destruction
 
-The first main function is under the namespace poison and it draws and moves the particle it takes a particle type from the vector
-and the second is a memory leak plug and you place the function before drawing or anywhere inside your gameplay loop and it takes no parameters
+to actually make a particle, call a CreateParticle with the following parameters:
+CreateParticle(Texture2D tex, Vector2 pos, Color col, float speed, float gravity, int angle, float scale, float lifeTime);
+or
+CreatePixelParticle(Vector2 pos, Color col, float speed, float gravity, int angle, int scale, float lifeTime)
 
-to actually make a particle you need to push it to a vector that have been created in the header its a pointer to a struct vector
-heres how to push it in
+They return a smart pointer to their respective types for you to manage if required otherwise you can ignore it as the other update functions automatically update the particles
 
-Particles.push_back(new Particle{Texture, Vector2 Position, Color color; float size; int Speed; int Angle; int LifeTime;});
-so we push back a new Particle with a Texture and a Vector2 type Position, with a raylib color type, next a size 1 is full size anyless shrinks it the rest is self explanitory
+Scale and lifetime automatically have pre defines if you not want to define those you dont have to
 
-Example:
-ParticleClear(); //right before drawing
+Rendering is tied to raylib as this repo includes other useful raylib functions however im just redoing this files because my old i felt my old implemention does fit my current skills with c++ anymore
+and the header doesnt manage the particles as much anymore and exposes more 'guts' to the devloper
 
-for (auto &a : PixelParticles) AutoParticle(*a); // used to draw and modify the particle
+===
+
+# Example :
+
+```c++
+#include "raylib.h"
+// if you have raylib.h in your include dir then define LOCALRAYLIB before including particles
+#define LOCALRAYLIB
+#include "particles.hpp"
+/* 
+* particles automatically includes the following: 
+*   math.h
+*   vector
+*   memory
+*/
+
+// i could redo the header for it to no include any C++ standard libary and make it C compatible however i do not
+// currently have any intrest in doing so however i could give pointers if you need help with it
+// contact me on discord at: CodePoison#8413 or you can find me on the Raylib discord
+
+
+
+#define ScreenWidth     1280
+#define ScreenHeight    720
+
+int main(){
+    while (!WindowShouldClose()){
+        CreatePixelParticle( Vector2{ ScreenWidth/2, ScreenHeight/2 }, GREEN, 10.0f, 8.0f, GetRandomValue(0, 360), 2, 10.0f );
+
+        for (int i = 0; i < PixelParticles.size(); i++) {
+            //header provides this ^^ to automatically manage particles
+            UpdatePixelParticle(PixelParticles[i]);
+        }
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        
+            for (int i = 0; i < PixelParticles.size(); i++) {
+                DrawPixelParticle(PixelParticles[i]);
+            }
+
+        EndDrawing();
+    }
+
+    CloseWindow();
+}
+```
