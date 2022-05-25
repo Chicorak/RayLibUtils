@@ -31,7 +31,6 @@ and the header doesnt manage the particles as much anymore and exposes more 'gut
 * particles automatically includes the following: 
 *   math.h
 *   vector
-*   memory
 */
 
 // i could redo the header for it to no include any C++ standard libary and make it C compatible however i do not
@@ -56,10 +55,11 @@ int main(){
         ClearBackground(RAYWHITE);
         
             for (int i = 0; i < PixelParticles.size(); i++) {
-                DrawPixelParticle(PixelParticles[i]);
+                DrawPixelParticle(*PixelParticles[i]);
             }
 
         EndDrawing();
+        DestroyParticles();
     }
 
     CloseWindow();
