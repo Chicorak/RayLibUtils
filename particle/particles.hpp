@@ -15,8 +15,9 @@
 enum Type {
     TYPE_NONE, // catch
     TYPE_CUSTOM, // user defined
-    TYPE_SMOKE, //pezzza's work yyoutube guid follow basically
-    TYPE_FIRE // WIP
+    TYPE_SMOKE, //pezzza's work youtube guide follow basically 
+    TYPE_FIRE, // custom fire not very accurate however a nice effect nonetheless
+    TYPE_EXPLOSION // WIP
 };
 
 
@@ -46,7 +47,7 @@ public:
 class PixelParticle 
 {
 public:
-    // Vector2 pos, Color col, float scale, float rotation, float angle, float speed, float gravity, float lifeTime;
+
     PixelParticle(Type type, Vector2 pos, Color col, float scale, float rotation, float angle, float speed, float gravity, float lifeTime = 1) {
         this->type = type;
         this->position = pos;
@@ -88,9 +89,23 @@ PixelParticle* CreatePixelParticleType(Type type, Vector2 pos, Color col, float 
 
     switch (type) {
     case TYPE_SMOKE:
+        angle += GetRandomValue(-20, 20);
         scale = 5;
         rotation = 0.0f;
         gravity = -4.0f;
+        break;
+
+    case TYPE_FIRE:
+        angle += GetRandomValue(-55, 55);
+        scale = 15;
+        rotation = 0.0f;
+        col.g = 125;
+        gravity = -22.0f;
+        break;
+
+    case TYPE_EXPLOSION:
+        scale = 0.2f;
+        rotation = 0.0f;
         break;
     
     default:
@@ -101,10 +116,22 @@ PixelParticle* CreatePixelParticleType(Type type, Vector2 pos, Color col, float 
         gravity = 0.0f;
         break;
     }
+
     PixelParticle* p = new PixelParticle(type, pos, col, scale, rotation, angle, speed, gravity, lifeTime);
     PixelParticles.push_back(p);
     return p;
 
+}
+
+void CreateExplosion(Vector2 pos, Color col, float size, float lifeTime = 10) {
+    col.a = 2;
+
+    //create a lot of explosion type particles 
+    for (int i = 0; i < 36; i++) {
+
+        CreatePixelParticleType(TYPE_EXPLOSION, pos, col, size, i * 10, lifeTime);
+    }
+    
 }
 
 // POINTER REQUIRED PARTICLE TO DRAW
@@ -128,11 +155,27 @@ void UpdatePixelParticle(PixelParticle *p) {
     {
     case TYPE_SMOKE:
         p->rotation += GetRandomValue(1, 6);
-        if (p->color.a > 2) p->color.a -= 2.0f; else p->color.a = 0;
+        p->color.a = Clamp(p->color.a - (GetFrameTime() * 255), 0, 255);
+        //if (p->color.a > 2) p->color.a -= 2.0f; else p->color.a = 0;
         p->scale += 0.4f;
-        p->speed *= 0.97;
+        p->speed *= 0.97f;
+        break;
+
+    case TYPE_FIRE:
+        p->rotation += GetRandomValue(1, 2);
+        p->color.r = Clamp(p->color.r - 1.2f, 0, 255);
+        p->color.g = Clamp(p->color.g - 4, 0, 255);
+        p->color.b = Clamp(p->color.b + 0.5f, 0, 255);
+        p->scale = Clamp(p->scale - 0.14f, 0, 100);
+        p->speed *= 0.98f;
         break;
     
+    case TYPE_EXPLOSION:
+        p->color.a = Clamp(pow(p->color.a, 2) , 0, 255);
+        p->scale += 1.0f;
+        p->speed *= 0.92f;
+        break;
+
     default:
         break;
     }
