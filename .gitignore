@@ -1,0 +1,7 @@
+.vscode/c_cpp_properties.json
+CompAndRun.bat
+lib/libraylib.a
+src/main.cpp
+include/raygui.h
+include/raylib.h
+test.exe

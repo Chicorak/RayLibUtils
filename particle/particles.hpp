@@ -68,6 +68,13 @@ public:
 std::vector<PixelParticle*> PixelParticles;
 std::vector<Particle*> Particles;
 
+//clamp function
+float Clamp(float value, float min, float max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
 // Texture2D tex, Vector2 pos, Color col, float speed, float gravity, float rotation, int angle, float scale, float lifeTime
 Particle* CreateParticle(Texture2D tex, Vector2 pos, Color col, float speed, float gravity, float rotation, int angle, float scale = 1, float lifeTime = 10) {
     Particle* p = new Particle(TYPE_CUSTOM, tex, pos, col, scale, rotation, angle, speed, gravity, lifeTime);
@@ -82,14 +89,14 @@ PixelParticle* CreatePixelParticle(Vector2 pos, Color col, float speed, float gr
     return p;
 }
 
-PixelParticle* CreatePixelParticleType(Type type, Vector2 pos, Color col, float speed, int angle, float lifeTime) {
+PixelParticle* CreatePixelParticleType(Type type, Vector2 pos, Color col, float speed, float angle, float lifeTime) {
     float scale;
     float rotation;
-    float gravity;
+    float gravity = 0;
 
     switch (type) {
     case TYPE_SMOKE:
-        angle += GetRandomValue(-20, 20);
+        angle += GetRandomValue(-25, 25);
         scale = 5;
         rotation = 0.0f;
         gravity = -4.0f;
@@ -125,13 +132,15 @@ PixelParticle* CreatePixelParticleType(Type type, Vector2 pos, Color col, float 
 
 void CreateExplosion(Vector2 pos, Color col, float size, float lifeTime = 10) {
     col.a = 2;
-
     //create a lot of explosion type particles 
-    for (int i = 0; i < 36; i++) {
-
+    for (float i = 0; i < 36; i+=1.0f) {
         CreatePixelParticleType(TYPE_EXPLOSION, pos, col, size, i * 10, lifeTime);
     }
-    
+
+    col.a = 2;
+    for (float i = 0; i < 36; i+=0.5f) {
+        CreatePixelParticleType(TYPE_EXPLOSION, pos, col, size - 1, i * 10, lifeTime);
+    }
 }
 
 // POINTER REQUIRED PARTICLE TO DRAW
@@ -157,8 +166,8 @@ void UpdatePixelParticle(PixelParticle *p) {
         p->rotation += GetRandomValue(1, 6);
         p->color.a = Clamp(p->color.a - (GetFrameTime() * 255), 0, 255);
         //if (p->color.a > 2) p->color.a -= 2.0f; else p->color.a = 0;
-        p->scale += 0.4f;
-        p->speed *= 0.97f;
+        p->scale += 0.55f;
+        p->speed *= 0.98f;
         break;
 
     case TYPE_FIRE:
@@ -171,8 +180,9 @@ void UpdatePixelParticle(PixelParticle *p) {
         break;
     
     case TYPE_EXPLOSION:
-        p->color.a = Clamp(pow(p->color.a, 2) , 0, 255);
-        p->scale += 1.0f;
+        p->color.a = Clamp(pow(p->color.a, 2) * (GetFrameTime() * 45), 0, 255);
+        if (p->color.a >= 250 && p->scale >= 50) p->lifeTime = 0.0f;
+        p->scale += 0.8f * (GetFrameTime() * 50);
         p->speed *= 0.92f;
         break;
 
@@ -198,13 +208,13 @@ void PixelParticlesClear() {
 }
 
 void DestroyParticles() {
-    for (int i = 0; i < Particles.size(); i++) {
+    for (size_t i = 0; i < Particles.size(); i++) {
         if (Particles[i]->lifeTime <= 0) {
             delete Particles[i];
             Particles.erase(Particles.begin()+i);
         }
     }   
-    for (int i = 0; i < PixelParticles.size(); i++) {  
+    for (size_t i = 0; i < PixelParticles.size(); i++) {  
         if (PixelParticles[i]->lifeTime <= 0) {
             delete PixelParticles[i];
             PixelParticles.erase(PixelParticles.begin() + i);
